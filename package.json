@@ -2,7 +2,7 @@
   "name": "throttled-queue",
   "version": "1.0.0",
   "description": "Throttles arbitrary code to execute a maximum number of times per interval. Best for making throttled API requests.",
-  "main": "factory.js",
+  "main": "throttled-queue.js",
   "directories": {
     "test": "test"
   },
@@ -18,5 +18,12 @@
     "request"
   ],
   "author": "Shaun Persad <shaunpersad@gmail.com> (http://inspirationjs.io)",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^1.5.2",
+    "mocha": "^2.4.5"
+  }
 }
