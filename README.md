@@ -73,7 +73,7 @@ var throttle = throttledQueue(10, 1000); // at most make 10 request every second
 for (var x = 0; x < 100; x++) {
 
     throttle(function() {
-        // This will fire at most 10 at a time, one after the other.
+        // This will fire at most 10 a second, as rapidly as possible.
     });
 }
 ```
@@ -86,7 +86,7 @@ var throttle = throttledQueue(10, 1000, true); // at most make 10 request every 
 for (var x = 0; x < 100; x++) {
 
     throttle(function() {
-        // This will fire at most 10 at a time, spacing them out instead of in a burst.
+        // This will fire at most 10 requests a second, spacing them out instead of in a burst.
     });
 }
 ```
