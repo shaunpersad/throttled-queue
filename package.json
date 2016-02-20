@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --recursive --reporter nyan"
+    "test": "./node_modules/mocha/bin/mocha --recursive --timeout 200000"
   },
   "keywords": [
     "node",

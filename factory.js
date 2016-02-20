@@ -16,32 +16,76 @@
         previous_throttledQueue = root.throttledQueue;
     }
 
+    /**
+     * Factory function.
+     *
+     * @param max_requests_per_interval
+     * @param interval
+     * @param evenly_spaced
+     * @returns {Function}
+     */
     var throttledQueue = function(max_requests_per_interval, interval, evenly_spaced) {
 
+        /**
+         * If all requests should be evenly spaced, adjust to suit.
+         */
         if (evenly_spaced) {
             interval = interval / max_requests_per_interval;
             max_requests_per_interval = 1;
         }
 
         var queue = [];
+        var last_called = Date.now();
 
-        setInterval(function() {
+        /**
+         * Gets called at a set interval to remove items from the queue.
+         * This is a self-adjusting timer,
+         * since the browser's setTimeout is highly inaccurate.
+         */
+        var dequeue = function() {
+
+            var threshold = last_called + interval;
+            var now = Date.now();
+
+            /**
+             * Adjust the timer if it was called too early.
+             */
+            if (now < threshold) {
+                clearTimeout(timeout);
+                timeout = setTimeout(dequeue, threshold - now);
+                return;
+            }
 
             var num_requests = 0;
 
+            /**
+             * Execute the callbacks.
+             */
             while (queue.length && num_requests < max_requests_per_interval) {
 
                 var callback = queue[num_requests++];
                 callback();
             }
-
+            /**
+             * Push the called items off the queue.
+             */
             if (num_requests < queue.length) {
                 queue = queue.slice(num_requests, queue.length);
             } else {
                 queue = [];
             }
-        }, interval);
+            last_called = Date.now();
+            timeout = setTimeout(dequeue, interval);
+        };
 
+        /**
+         * Kick off the timer.
+         */
+        var timeout = setTimeout(dequeue, interval);
+
+        /**
+         * Return a function that can enqueue items.
+         */
         return function(callback) {
             queue.push(callback);
         };
