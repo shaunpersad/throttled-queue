@@ -1,0 +1,22 @@
+{
+  "name": "throttled-queue",
+  "version": "1.0.0",
+  "description": "Throttles arbitrary code to execute a maximum number of times per interval. Best for making throttled API requests.",
+  "main": "factory.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha --recursive --reporter nyan"
+  },
+  "keywords": [
+    "node",
+    "throttled-queue",
+    "queue",
+    "throttle",
+    "throttled",
+    "request"
+  ],
+  "author": "Shaun Persad <shaunpersad@gmail.com> (http://inspirationjs.io)",
+  "license": "MIT"
+}
