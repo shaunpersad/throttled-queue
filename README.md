@@ -92,7 +92,7 @@ for (var x = 0; x < 100; x++) {
 ```
 
 ## Tests
-Note: The tests take a few minutes to run.
+Note: The tests take a few minutes to run. Watch the console to see how closely the actual rate limit gets to the maximum.
 ### Node.js
 Run `npm test`.
 ### Browser
