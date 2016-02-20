@@ -1,2 +1,2 @@
-GLOBAL.throttledQueue = require('../factory');
+GLOBAL.throttledQueue = require('../throttled-queue');
 
