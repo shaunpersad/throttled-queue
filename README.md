@@ -17,6 +17,7 @@ Can be used in a Node.js environment, or directly in the browser.
 var throttledQueue = require('throttled-queue');
 ```
 Else, include it in a script tag in your browser and `throttledQueue` will be globally available.
+
 2) Create an instance of a throttled queue by specifying the maximum number of requests as the first parameter,
 and the interval in milliseconds as the second:
 ```
