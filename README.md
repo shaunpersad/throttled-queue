@@ -4,13 +4,13 @@ This utility function allows throttling of a queue any arbitrary code. For examp
 such as Twitter is subject to rate limits.  By wrapping all of your API calls in a throttle, it will automatically adjust
 your requests to be within the acceptable rate limits.
 
-
 ## Installation
 Can be used in a Node.js environment, or directly in the browser.
 ### Node.js
 `npm install throttled-queue`
 ### Browser
 `<script src="throttled-queue.min.js"></script>`
+
 ## Usage
 1) If in node.js, `require` the factory function:
 ```
@@ -29,6 +29,7 @@ throttle(function() {
     // perform some type of activity in here.
 });
 ```
+
 ## Quick Examples
 ### Basic
 Rapidly assigning network calls to be run, but they will be limited to 1 request per second.
@@ -44,7 +45,7 @@ for (var x = 0; x < 100; x++) {
 }
 ```
 ### Reusable
-Wherever the `throttle` instance is used, your function will be placed into the same queue, 
+Wherever the `throttle` instance is used, your action will be placed into the same queue, 
 and be subject to the same rate limits.
 ```
 var throttledQueue = require('throttled-queue');
@@ -72,7 +73,7 @@ var throttle = throttledQueue(10, 1000); // at most make 10 request every second
 for (var x = 0; x < 100; x++) {
 
     throttle(function() {
-        // make a network request. This will fire at most 10 at a time.
+        // This will fire at most 10 at a time, one after the other.
     });
 }
 ```
@@ -85,9 +86,17 @@ var throttle = throttledQueue(10, 1000, true); // at most make 10 request every 
 for (var x = 0; x < 100; x++) {
 
     throttle(function() {
-        // make a network request. This will fire at most 10 at a time, spacing them out instead of in a burst.
+        // This will fire at most 10 at a time, spacing them out instead of in a burst.
     });
 }
 ```
+
+## Tests
+Note: The tests take a few minutes to run.
+### Node.js
+Run `npm test`.
+### Browser
+Open `test/index.html` in your browser.
+
 
 
