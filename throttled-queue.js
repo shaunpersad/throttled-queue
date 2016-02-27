@@ -34,6 +34,10 @@
             max_requests_per_interval = 1;
         }
 
+        if (interval < 200) {
+            console.warn('An interval of less than 200ms can create performance issues.');
+        }
+
         var queue = [];
         var last_called = Date.now();
 
@@ -56,24 +60,11 @@
                 return;
             }
 
-            var num_requests = 0;
-
-            /**
-             * Execute the callbacks.
-             */
-            while (queue.length && num_requests < max_requests_per_interval) {
-
-                var callback = queue[num_requests++];
-                callback();
+            var callbacks = queue.splice(0, max_requests_per_interval);
+            for(var x = 0; x < callbacks.length; x++) {
+                callbacks[x]();
             }
-            /**
-             * Push the called items off the queue.
-             */
-            if (num_requests < queue.length) {
-                queue = queue.slice(num_requests, queue.length);
-            } else {
-                queue = [];
-            }
+
             last_called = Date.now();
             timeout = setTimeout(dequeue, interval);
         };
