@@ -68,7 +68,7 @@ for (var y = 0; y < 50; y++) {
 By specifying a number higher than 1 as the first parameter, you can dequeue multiple actions within the given interval:
 ```
 var throttledQueue = require('throttled-queue');
-var throttle = throttledQueue(10, 1000); // at most make 10 request every seconds.
+var throttle = throttledQueue(10, 1000); // at most make 10 requests every second.
 
 for (var x = 0; x < 100; x++) {
 
@@ -81,7 +81,7 @@ for (var x = 0; x < 100; x++) {
 You can space out your actions by specifying `true` as the third (optional) parameter:
 ```
 var throttledQueue = require('throttled-queue');
-var throttle = throttledQueue(10, 1000, true); // at most make 10 request every seconds, but evenly spaced.
+var throttle = throttledQueue(10, 1000, true); // at most make 10 requests every second, but evenly spaced.
 
 for (var x = 0; x < 100; x++) {
 
