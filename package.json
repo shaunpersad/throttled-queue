@@ -9,6 +9,10 @@
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --recursive --timeout 200000"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shaunpersad/throttled-queue.git"
+  },
   "keywords": [
     "node",
     "throttled-queue",
@@ -19,6 +23,9 @@
   ],
   "author": "Shaun Persad <shaunpersad@gmail.com> (http://inspirationjs.io)",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shaunpersad/throttled-queue/issues"
+  },
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",
