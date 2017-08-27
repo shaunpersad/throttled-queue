@@ -1,6 +1,6 @@
 {
   "name": "throttled-queue",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Throttles arbitrary code to execute a maximum number of times per interval. Best for making throttled API requests.",
   "main": "throttled-queue.js",
   "directories": {
@@ -15,13 +15,13 @@
   },
   "keywords": [
     "node",
-    "throttled-queue",
+    "rate limit",
     "queue",
     "throttle",
     "throttled",
     "request"
   ],
-  "author": "Shaun Persad <shaunpersad@gmail.com> (http://inspirationjs.io)",
+  "author": "Shaun Persad <shaunpersad@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/shaunpersad/throttled-queue/issues"
