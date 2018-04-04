@@ -25,6 +25,8 @@
      * @returns {Function}
      */
     var throttledQueue = function(max_requests_per_interval, interval, evenly_spaced) {
+        let n = 0
+        let running = false
 
         /**
          * If all requests should be evenly spaced, adjust to suit.
@@ -41,13 +43,27 @@
         var queue = [];
         var last_called = Date.now();
 
+        // [rps] instead of waiting on the timer, just reset the amount of jobs run each interval
+        // [rps]   and make sure each interval, no more than max_requests_per_interval get run.
+        // [rps]   this should address https://github.com/shaunpersad/throttled-queue/issues/1
+
+        const next = function() {
+            running = true
+            if ( queue.length && n < max_requests_per_interval ) {
+                n++
+                queue.shift()()
+                next()
+            } else {
+                running = false
+            }
+        }
+
         /**
          * Gets called at a set interval to remove items from the queue.
          * This is a self-adjusting timer,
          * since the browser's setTimeout is highly inaccurate.
          */
         var dequeue = function() {
-
             var threshold = last_called + interval;
             var now = Date.now();
 
@@ -60,10 +76,12 @@
                 return;
             }
 
-            var callbacks = queue.splice(0, max_requests_per_interval);
-            for(var x = 0; x < callbacks.length; x++) {
-                callbacks[x]();
-            }
+            //var callbacks = queue.splice(0, max_requests_per_interval);
+            //for(var x = 0; x < callbacks.length; x++) {
+            //    callbacks[x]();
+            //}
+            n = 0
+            if ( !running ) next()
 
             last_called = Date.now();
             timeout = setTimeout(dequeue, interval);
@@ -72,6 +90,7 @@
         /**
          * Kick off the timer.
          */
+
         var timeout = setTimeout(dequeue, interval);
 
         /**
@@ -79,6 +98,7 @@
          */
         return function(callback) {
             queue.push(callback);
+            if ( !running ) next()
         };
     };
 
