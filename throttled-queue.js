@@ -69,6 +69,8 @@
             lastCalled = Date.now();
             if (queue.length) {
                 timeout = setTimeout(dequeue, interval);
+            } else {
+                timeout = null;
             }
         };
 
