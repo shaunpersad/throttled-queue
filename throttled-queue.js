@@ -39,7 +39,7 @@
         }
 
         var queue = [];
-        var lastCalled = Date.now();
+        var lastCalled = new Date(0);
         var timeout;
 
         /**
@@ -69,6 +69,7 @@
             lastCalled = Date.now();
             if (queue.length) {
                 timeout = setTimeout(dequeue, interval);
+                dequeue();
             } else {
                 timeout = null;
             }
