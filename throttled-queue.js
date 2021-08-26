@@ -22,7 +22,7 @@
      * @param maxRequestPerInterval
      * @param interval
      * @param evenlySpaced
-     * @returns {Function}
+     * @returns {Object}
      */
     var throttledQueue = function(maxRequestPerInterval, interval, evenlySpaced) {
 
@@ -47,7 +47,7 @@
          * This is a self-adjusting timer,
          * since the browser's setTimeout is highly inaccurate.
          */
-        var dequeue = function() {
+        var dequeue = function(cb) {
 
             var threshold = lastCalled + interval;
             var now = Date.now();
@@ -57,7 +57,7 @@
              */
             if (now < threshold) {
                 clearTimeout(timeout);
-                timeout = setTimeout(dequeue, threshold - now);
+                timeout = setTimeout(cb ? () => dequeue(cb) : dequeue, threshold - now);
                 return;
             }
 
@@ -68,19 +68,34 @@
 
             lastCalled = Date.now();
             if (queue.length) {
-                timeout = setTimeout(dequeue, interval);
+                timeout = setTimeout(cb ? () => dequeue(cb) : dequeue, interval);
             } else {
                 timeout = null;
+                cb(null)
             }
         };
 
-        return function enqueue(callback) {
+        var enqueue = function(callback, cb) {
 
             queue.push(callback);
             if (!timeout) {
-                timeout = setTimeout(dequeue, interval);
+                timeout = setTimeout(cb ? () => dequeue(cb) : dequeue, interval);
             }
         };
+
+        var asyncEnqueue = function(callback) {
+            return new Promise((resolve, reject) => {
+                enqueue(callback, (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+        };
+
+        return {
+            throttle: enqueue,
+            asyncThrottle: asyncEnqueue,
+        }
     };
 
     throttledQueue.noConflict = function () {

@@ -37,7 +37,7 @@ throttle(function() {
 Rapidly assigning network calls to be run, but they will be limited to 1 request per second.
 ```js
 var throttledQueue = require('throttled-queue');
-var throttle = throttledQueue(1, 1000); // at most make 1 request every second.
+var throttle = throttledQueue(1, 1000).throttle; // at most make 1 request every second.
 
 for (var x = 0; x < 100; x++) {
 
@@ -47,12 +47,28 @@ for (var x = 0; x < 100; x++) {
     });
 }
 ```
+
+### Async
+Rapidly assigning network calls to be run, but they will be limited to 1 request per second and returns Promise.
+```js
+var throttledQueue = require('throttled-queue');
+var throttle = throttledQueue(1, 1000).asyncThrottle; // at most make 1 request every second.
+
+for (var x = 0; x < 100; x++) {
+
+    throttle(function() {
+        // make a network request.
+        fetch('https://api.github.com/search/users?q=shaunpersad').then(console.log);
+    })
+    .then(() => console.log('complete'));
+}
+```
 ### Reusable
 Wherever the `throttle` instance is used, your action will be placed into the same queue, 
 and be subject to the same rate limits.
 ```js
 var throttledQueue = require('throttled-queue');
-var throttle = throttledQueue(1, 60 * 1000); // at most make 1 request every minute.
+var throttle = throttledQueue(1, 60 * 1000).throttle; // at most make 1 request every minute.
 
 for (var x = 0; x < 50; x++) {
 
@@ -73,7 +89,7 @@ for (var y = 0; y < 50; y++) {
 By specifying a number higher than 1 as the first parameter, you can dequeue multiple actions within the given interval:
 ```js
 var throttledQueue = require('throttled-queue');
-var throttle = throttledQueue(10, 1000); // at most make 10 requests every second.
+var throttle = throttledQueue(10, 1000).throttle; // at most make 10 requests every second.
 
 for (var x = 0; x < 100; x++) {
 
@@ -87,7 +103,7 @@ for (var x = 0; x < 100; x++) {
 You can space out your actions by specifying `true` as the third (optional) parameter:
 ```js
 var throttledQueue = require('throttled-queue');
-var throttle = throttledQueue(10, 1000, true); // at most make 10 requests every second, but evenly spaced.
+var throttle = throttledQueue(10, 1000, true).throttle; // at most make 10 requests every second, but evenly spaced.
 
 for (var x = 0; x < 100; x++) {
 
