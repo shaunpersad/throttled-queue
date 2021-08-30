@@ -23,7 +23,7 @@ Else, include it in a script tag in your browser and `throttledQueue` will be gl
 2) Create an instance of a throttled queue by specifying the maximum number of requests as the first parameter,
 and the interval in milliseconds as the second:
 ```js
-var throttle = throttledQueue(5, 1000); // at most 5 requests per second.
+var throttle = throttledQueue(5, 1000).throttle; // at most 5 requests per second.
 ```
 3) Use the `throttle` instance as a function to enqueue actions:
 ```js
