@@ -1,4 +1,4 @@
-export default function throttledQueue(
+function throttledQueue(
   maxRequestsPerInterval: number,
   interval: number,
   evenlySpaced = false,
@@ -10,13 +10,9 @@ export default function throttledQueue(
     interval = interval / maxRequestsPerInterval;
     maxRequestsPerInterval = 1;
   }
-  if (interval < 200) {
-    console.warn('An interval of less than 200ms can create performance issues.');
-  }
   const queue: Array<() => Promise<void>> = [];
-  let lastCalled = Date.now();
-  let timeout: number | undefined;
-
+  let lastCalled = 0;
+  let timeout: NodeJS.Timeout | undefined = undefined;
   /**
    * Gets called at a set interval to remove items from the queue.
    * This is a self-adjusting timer, since the browser's setTimeout is highly inaccurate.
@@ -28,7 +24,8 @@ export default function throttledQueue(
      * Adjust the timer if it was called too early.
      */
     if (now < threshold) {
-      clearTimeout(timeout);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      timeout && clearTimeout(timeout);
       timeout = setTimeout(dequeue, threshold - now);
       return;
     }
@@ -49,6 +46,12 @@ export default function throttledQueue(
       if (!timeout) {
         timeout = setTimeout(dequeue, interval);
       }
+      if (queue.length <= maxRequestsPerInterval) {
+        dequeue();
+      }
     },
   );
 }
+module.exports = throttledQueue;
+export default throttledQueue;
+

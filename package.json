@@ -1,6 +1,6 @@
 {
   "name": "throttled-queue",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Throttles arbitrary code to execute a maximum number of times per interval. Best for making throttled API requests.",
   "main": "dist/throttledQueue.js",
   "directories": {
@@ -40,6 +40,7 @@
   },
   "devDependencies": {
     "@types/mocha": "^9.0.0",
+    "@types/node": "^17.0.8",
     "@typescript-eslint/eslint-plugin": "^5.9.0",
     "@typescript-eslint/parser": "^5.9.0",
     "eslint": "^8.6.0",
