@@ -127,7 +127,7 @@ and in most cases will automatically infer the right type for the result of the 
 However, you may also specify the return type of the promise when needed:
 ```typescript
 import throttledQueue from 'throttled-queue';
-const throttle = throttledQueue<number>(1, 1000);
+const throttle = throttledQueue(1, 1000);
 const result1 = await throttle<string>(() => '1');
 const result2 = await throttle<boolean>(() => Promise.resolve(true));
 ```
