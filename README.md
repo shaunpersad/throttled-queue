@@ -111,11 +111,11 @@ const throttledQueue = require('throttled-queue');
 const throttle = throttledQueue(10, 1000, true); // at most make 10 requests every second, but evenly spaced.
 
 const usernames = ['shaunpersad', 'forward-motion'];
-const profiles = await Promise.all(usernames.map((username) => {
-    return throttle(() => {
+const profiles = await Promise.all(
+    usernames.map((username) => throttle(() => {
         return fetch(`https://api.github.com/search/users?q=${username}`);
-    });
-}));
+    }))
+);
 
 const justMe = await throttle(() => fetch('https://api.github.com/search/users?q=shaunpersad'));
 ```
@@ -124,7 +124,7 @@ const justMe = await throttle(() => fetch('https://api.github.com/search/users?q
 The package is written in Typescript and includes types by default. The `throttle` function is a generic,
 and in most cases will automatically infer the right type for the result of the promise from the input.
 
-However, you may also specify the return type when needed:
+However, you may also specify the return type of the promise when needed:
 ```typescript
 import throttledQueue from 'throttled-queue';
 const throttle = throttledQueue<number>(1, 1000);

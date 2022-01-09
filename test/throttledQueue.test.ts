@@ -1,15 +1,8 @@
 import throttledQueue from '../src/throttledQueue';
 
-function calculateRPMS(numRequests: number, timeStarted: number) {
-
-  return numRequests / (Date.now() - timeStarted);
-
-}
-
 describe('throttled-queue', function () {
 
-  it('should queue all fns', function (done) {
-
+  it('should queue all fns', function () {
     const requestsPerInterval = 1;
     const interval = 200;
     const throttle = throttledQueue(requestsPerInterval, interval);
@@ -17,129 +10,100 @@ describe('throttled-queue', function () {
     const requestLimit = 100;
     for (let x = 0; x < requestLimit; x++) {
       void throttle(() => {
-        console.log('Throttling...');
         numRequests++;
       });
     }
-    void throttle(() => {
+    return throttle(() => {
       if (numRequests !== requestLimit) {
         throw new Error('Not all callbacks queued.');
       }
-      done();
     });
   });
 
-  it('should queue the fn within the interval', function (done) {
-
-    const requestsPerInterval = 1;
-    const interval = 200;
-    const throttle = throttledQueue(requestsPerInterval, interval);
-    let lastExecuted = Date.now();
-
-    let numRequests = 0;
-    const requestLimit = 100;
-
-    for (let x = 0; x < requestLimit; x++) {
-      void throttle(() => {
-        console.log('Throttling...');
-        const now = Date.now();
-        const timeElapsed = now - lastExecuted;
-        if (timeElapsed < interval) {
-          throw new Error('Did not honor interval.');
-        }
-        lastExecuted = now;
-        numRequests++;
-      });
-    }
-    void throttle(() => {
-      if (numRequests !== requestLimit) {
-        throw new Error('Not all callbacks queued.');
-      }
-      done();
-    });
-  });
-
-  it('should queue the fn and honor the interval', function (done) {
+  it('should queue the fn and honor the interval', function () {
 
     const requestsPerInterval = 1;
     const interval = 500;
     const throttle = throttledQueue(requestsPerInterval, interval);
-    const timeStarted = Date.now();
-    const maxRpms = requestsPerInterval / interval;
-
-    let numRequests = 0;
     const requestLimit = 100;
+    let lastIntervalStart = process.hrtime.bigint();
+    let numRequests = 0;
+    let numRequestsPerInterval = 0;
 
     for (let x = 0; x < requestLimit; x++) {
       void throttle(() => {
-        const rpms = calculateRPMS(++numRequests, timeStarted);
-        console.log(rpms, maxRpms);
-        if (rpms > maxRpms) {
+        if ((process.hrtime.bigint() - lastIntervalStart) > (interval * 1000000)) {
+          lastIntervalStart = process.hrtime.bigint();
+          numRequestsPerInterval = 0;
+        }
+        if (++numRequestsPerInterval > requestsPerInterval) {
           throw new Error('Did not honor interval.');
         }
+        numRequests++;
       });
     }
-    void throttle(() => {
+    return throttle(() => {
       if (numRequests !== requestLimit) {
         throw new Error('Not all callbacks queued.');
       }
-      done();
     });
   });
 
-  it('should queue the fn and honor the interval with multiple requests per interval', function (done) {
+  it('should queue the fn and honor the interval with multiple requests per interval', function () {
 
     const requestsPerInterval = 3;
     const interval = 1000;
     const throttle = throttledQueue(requestsPerInterval, interval);
-    const timeStarted = Date.now();
-    const maxRpms = requestsPerInterval / interval;
-
-    let numRequests = 0;
     const requestLimit = 100;
+    let lastIntervalStart = process.hrtime.bigint();
+    let numRequests = 0;
+    let numRequestsPerInterval = 0;
 
     for (let x = 0; x < requestLimit; x++) {
       void throttle(() => {
-        const rpms = calculateRPMS(++numRequests, timeStarted);
-        console.log(rpms, maxRpms);
-        if (rpms > maxRpms) {
+        if ((process.hrtime.bigint() - lastIntervalStart) > (interval * 1000000)) {
+          lastIntervalStart = process.hrtime.bigint();
+          numRequestsPerInterval = 0;
+        }
+        if (++numRequestsPerInterval > requestsPerInterval) {
           throw new Error('Did not honor interval.');
         }
+        numRequests++;
       });
     }
-    void throttle(() => {
+    return throttle(() => {
       if (numRequests !== requestLimit) {
         throw new Error('Not all callbacks queued.');
       }
-      done();
     });
   });
 
-  it('should queue the fn and honor the interval with multiple evenly spaced requests per interval', function (done) {
+  it('should queue the fn and honor the interval with multiple evenly spaced requests per interval', function () {
 
     const requestsPerInterval = 3;
     const interval = 1000;
     const throttle = throttledQueue(requestsPerInterval, interval, true);
-    const timeStarted = Date.now();
-    const maxRpms = requestsPerInterval / interval;
-
-    let numRequests = 0;
     const requestLimit = 100;
+    let lastIntervalStart = process.hrtime.bigint();
+    let numRequests = 0;
+    let numRequestsPerInterval = 0;
 
     for (let x = 0; x < requestLimit; x++) {
       void throttle(() => {
-        const rpms = calculateRPMS(++numRequests, timeStarted);
-        console.log(rpms, maxRpms);
-        if (rpms > maxRpms) {
+        if ((process.hrtime.bigint() - lastIntervalStart) > (interval * 1000000)) {
+          lastIntervalStart = process.hrtime.bigint();
+          numRequestsPerInterval = 0;
+        }
+        if (++numRequestsPerInterval > requestsPerInterval) {
           throw new Error('Did not honor interval.');
         }
+        numRequests++;
       });
     }
-    void throttle(() => {
+    return throttle(() => {
       if (numRequests !== requestLimit) {
         throw new Error('Not all callbacks queued.');
       }
-      done();
     });
   });
 
