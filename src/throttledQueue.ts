@@ -46,9 +46,6 @@ function throttledQueue(
       if (!timeout) {
         timeout = setTimeout(dequeue, interval);
       }
-      if (queue.length <= maxRequestsPerInterval) {
-        dequeue();
-      }
     },
   );
 }
