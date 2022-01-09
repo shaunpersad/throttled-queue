@@ -16,7 +16,7 @@ It can be used in a Node.js environment, or directly in the browser.
 ## Usage
 1) `require` or `import` the factory function:
 ```javascript
-var throttledQueue = require('throttled-queue');
+const throttledQueue = require('throttled-queue');
 ```
 
 ```javascript
