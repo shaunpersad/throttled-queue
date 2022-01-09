@@ -1,6 +1,6 @@
 {
   "name": "throttled-queue",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Throttles arbitrary code to execute a maximum number of times per interval. Best for making throttled API requests.",
   "main": "dist/throttledQueue.js",
   "directories": {
