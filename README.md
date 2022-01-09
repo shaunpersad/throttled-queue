@@ -28,12 +28,14 @@ and the interval in milliseconds as the second:
 ```javascript
 const throttle = throttledQueue(5, 1000); // at most 5 requests per second.
 ```
+
 3) Use the `throttle` instance as a function to enqueue actions:
 ```javascript
 throttle(() => {
     // perform some type of activity in here.
 });
 ```
+
 The `throttle` function will also return a promise with the result of your operation:
 ```javascript
 const result = await throttle(() => {
