@@ -1,12 +1,10 @@
 {
   "name": "throttled-queue",
-  "version": "2.1.2",
+  "version": "2.1.3",
   "description": "Throttles arbitrary code to execute a maximum number of times per interval. Best for making throttled API requests.",
   "main": "dist/throttledQueue.js",
-  "directories": {
-    "lib": "src",
-    "test": "test"
-  },
+  "types": "dist/throttledQueue.d.ts",
+  "files": ["dist/*", "src/*"],
   "scripts": {
     "prepublishOnly": "tsc",
     "test": "mocha"
