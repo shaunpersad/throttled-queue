@@ -39,7 +39,8 @@ function throttledQueue(
     }
     lastIntervalStart = now;
     numRequestsPerInterval = 0;
-    for (const callback of queue.splice(0, maxRequestsPerInterval)) {
+    for (let i = 0; i < maxRequestsPerInterval; i++){
+      const callback = queue.next();
       numRequestsPerInterval++;
       void callback();
     }
