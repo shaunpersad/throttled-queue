@@ -1,7 +1,9 @@
+import timeoutQueue from 'timeout-queue';
 function throttledQueue(
   maxRequestsPerInterval: number,
   interval: number,
   evenlySpaced = false,
+  timeToLive = -1, // -1 for infinite
 ) {
   /**
    * If all requests should be evenly spaced, adjust to suit.
@@ -10,7 +12,12 @@ function throttledQueue(
     interval = interval / maxRequestsPerInterval;
     maxRequestsPerInterval = 1;
   }
-  const queue: Array<() => Promise<void>> = [];
+  class Canceller{ cancel() {} }
+  const cancelToken = new Canceller();
+  function ifExpired(){
+    cancelToken.cancel();
+  }
+  const queue = timeoutQueue(timeToLive, ifExpired);
   let lastIntervalStart = 0;
   let numRequestsPerInterval = 0;
   let timeout: NodeJS.Timeout | undefined;
@@ -32,7 +39,8 @@ function throttledQueue(
     }
     lastIntervalStart = now;
     numRequestsPerInterval = 0;
-    for (const callback of queue.splice(0, maxRequestsPerInterval)) {
+    for (let i = 0; i < maxRequestsPerInterval; i++){
+      const callback = queue.next();
       numRequestsPerInterval++;
       void callback();
     }
@@ -45,6 +53,9 @@ function throttledQueue(
 
   return <Return = unknown>(fn: () => Promise<Return> | Return): Promise<Return> => new Promise<Return>(
     (resolve, reject) => {
+      cancelToken.cancel = function () {
+        reject(new Error('Cancelled due to timeout'));
+      };
       const callback = () => Promise.resolve().then(fn).then(resolve).catch(reject);
       const now = Date.now();
       if (timeout === undefined && (now - lastIntervalStart) > interval) {

@@ -119,6 +119,23 @@ const profiles = await Promise.all(
 
 const justMe = await throttle(() => fetch('https://api.github.com/search/users?q=shaunpersad'));
 ```
+### Promises with timeout
+Starting in version `2.1.5`, you can also add a timeout to the waiting. If the promise doesn't resolve before the timeout is reached, it will throw an Error("Cancelled due to timeout")
+```javascript
+const throttledQueue = require('throttled-queue');
+// at most make 4 requests per minute, with timeout after 2 seconds
+const throttle = throttledQueue(4, 60*1000, false, 2000);
+
+for(let i=0; i<5; i++){
+    try {
+        const res = await throttle(() => fetch('https://api.github.com/search/users?q=shaunpersad'));
+        console.log("request",i,"success")
+    }
+    catch(error) {
+        console.log("request",i,"error:",error)
+    }
+}
+```
 
 ## Typescript support
 The package is written in Typescript and includes types by default. The `throttle` function is a generic,
