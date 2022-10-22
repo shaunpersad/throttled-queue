@@ -54,7 +54,7 @@ const throttle = throttledQueue(1, 1000); // at most make 1 request every second
 for (let x = 0; x < 100; x++) {
     throttle(() => {
         // make a network request.
-        return fetch('https://api.github.com/search/users?q=shaunpersad');
+        return fetch('https://api.github.com/search/users?q=Zhell1');
     });
 }
 ```
@@ -68,13 +68,13 @@ const throttle = throttledQueue(1, 60 * 1000); // at most make 1 request every m
 for (let x = 0; x < 50; x++) {
     throttle(() => {
         // make a network request.
-        return fetch('https://api.github.com/search/users?q=shaunpersad');
+        return fetch('https://api.github.com/search/users?q=Zhell1');
     });
 }
 for (let y = 0; y < 50; y++) {
     throttle(() => {
         // make another type of network request.
-        return fetch('https://api.github.com/search/repositories?q=throttled-queue+user:shaunpersad');
+        return fetch('https://api.github.com/search/repositories?q=throttled-queue+user:Zhell1');
     });
 }
 ```
@@ -87,7 +87,7 @@ const throttle = throttledQueue(10, 1000); // at most make 10 requests every sec
 for (let x = 0; x < 100; x++) {
     throttle(() => {
         // This will fire at most 10 a second, as rapidly as possible.
-        return fetch('https://api.github.com/search/users?q=shaunpersad');
+        return fetch('https://api.github.com/search/users?q=Zhell1');
     });
 }
 ```
@@ -100,7 +100,7 @@ const throttle = throttledQueue(10, 1000, true); // at most make 10 requests eve
 for (var x = 0; x < 100; x++) {
     throttle(() => {
         // This will fire at most 10 requests a second, spacing them out instead of in a burst.
-        return fetch('https://api.github.com/search/users?q=shaunpersad');
+        return fetch('https://api.github.com/search/users?q=Zhell1');
     });
 }
 ```
@@ -110,14 +110,14 @@ Starting in version `2.0.0`, you can wait for the results of your operation:
 const throttledQueue = require('throttled-queue');
 const throttle = throttledQueue(10, 1000, true); // at most make 10 requests every second, but evenly spaced.
 
-const usernames = ['shaunpersad', 'forward-motion'];
+const usernames = ['Zhell1', 'forward-motion'];
 const profiles = await Promise.all(
     usernames.map((username) => throttle(() => {
         return fetch(`https://api.github.com/search/users?q=${username}`);
     }))
 );
 
-const justMe = await throttle(() => fetch('https://api.github.com/search/users?q=shaunpersad'));
+const justMe = await throttle(() => fetch('https://api.github.com/search/users?q=Zhell1'));
 ```
 ### Promises with timeout
 Starting in version `2.1.5`, you can also add a timeout to the waiting. If the promise doesn't resolve before the timeout is reached, it will throw an Error("Cancelled due to timeout")
@@ -128,7 +128,7 @@ const throttle = throttledQueue(4, 60*1000, false, 2000);
 
 for(let i=0; i<5; i++){
     try {
-        const res = await throttle(() => fetch('https://api.github.com/search/users?q=shaunpersad'));
+        const res = await throttle(() => fetch('https://api.github.com/search/users?q=Zhell1'));
         console.log("request",i,"success")
     }
     catch(error) {

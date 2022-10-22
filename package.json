@@ -1,7 +1,7 @@
 {
-  "name": "throttled-queue",
+  "name": "throttled-queue-timeout",
   "version": "2.1.5",
-  "description": "Throttles arbitrary code to execute a maximum number of times per interval. Best for making throttled API requests.",
+  "description": "Throttles arbitrary code to execute a maximum number of times per interval with a timeout. Best for making throttled API requests.",
   "main": "dist/throttledQueue.js",
   "types": "dist/throttledQueue.d.ts",
   "files": [
@@ -24,7 +24,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shaunpersad/throttled-queue.git"
+    "url": "git@github.com:Zhell1/throttled-queue-timeout.git"
   },
   "keywords": [
     "node",
@@ -35,10 +35,10 @@
     "request",
     "timeout"
   ],
-  "author": "Shaun Persad <shaunpersad@gmail.com>",
+  "author": "Zhell <zhell1057@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/shaunpersad/throttled-queue/issues"
+    "url": "https://github.com/Zhell1/throttled-queue-timeout/issues"
   },
   "devDependencies": {
     "@types/mocha": "^9.0.0",
