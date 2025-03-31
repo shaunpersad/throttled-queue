@@ -119,7 +119,46 @@ const profiles = await Promise.all(
 
 const justMe = await throttle(() => fetch('https://api.github.com/search/users?q=shaunpersad'));
 ```
-
+### Adjusting queue execution
+Starting in version `3.0.0`, you can now retry individual executions, or pause the queue entirely until a cooldown.
+Both are useful for reacting to different status codes when calling an API:
+```javascript
+const result = await throttle(async (manager) => {
+    const response = await fetch('https://api.github.com/search/users?q=shaunpersad');
+    if (response.status === 429) {
+        const retryAfter = response.headers.get('retry-after') ?? 0;
+        if (retryAfter) { // retry-after is in seconds
+            const retryAfterMs = retryAfter * 1000;
+            return manager.pauseQueueAndRetry(retryAfterMs); // pause the queue until retryAfter
+        }
+        // if we can't tell when to retry, use the default wait time
+        return manager.pauseQueueAndRetry();
+    }
+    if (!response.ok) {
+        return manager.retry(); // retry this function alone using the default wait time
+    }
+    return response.json();
+});
+```
+### Managing retry state
+In the above example, we could get ourselves into an infinite retry loop if the API consistently returns a bad status.
+To fix that, we can limit retries by maintaining some information about the state of retries. The second argument of the `throttle` enqueue function now accepts an arbitrary object that will be passed on to the `manager` for every execution of the function being enqueued:
+```javascript
+const result = await throttle(
+    async (manager) => {
+        const response = await fetch('https://api.github.com/search/users?q=shaunpersad');
+        if (!response.ok) {
+            if (!manager.state.retried) {
+                manager.state.retried = true;
+                return manager.retry(1500); // retry this function alone after 1500ms
+            }
+            throw new Error(await response.text());
+        }
+        return response.json();
+    },
+    { retried: false }, // the state that will be preserved across all retries of the same enqueued function above
+);
+```
 ## Typescript support
 The package is written in Typescript and includes types by default. The `throttle` function is a generic,
 and in most cases will automatically infer the right type for the result of the promise from the input.
