@@ -135,8 +135,9 @@ const result = await throttle(async (manager) => {
         // if we can't tell when to retry, use the default wait time
         return manager.pauseQueueAndRetry();
     }
+    // for all other bad statuses, we just want to retry this specific API call
     if (!response.ok) {
-        return manager.retry(); // retry this function alone using the default wait time
+        return manager.retry(); // retry using the default wait time
     }
     return response.json();
 });
@@ -152,7 +153,7 @@ const result = await throttle(
         if (!response.ok) {
             if (!manager.state.retried) {
                 manager.state.retried = true;
-                return manager.retry(1500); // retry this function alone after 1500ms
+                return manager.retry(1500); // retry this function after 1500ms
             }
             throw new Error(await response.text());
         }
@@ -161,6 +162,8 @@ const result = await throttle(
     { retried: false }, // the state that will be preserved across all retries of the same enqueued function above
 );
 ```
+Note that you can pass any object as the initial state, so if you wanted to keep track of the number of retries,
+or implement more advanced retries using exponential backoff etc., you could store whatever you needed to in the state object.
 ## Typescript support
 The package is written in Typescript and includes types by default. The `throttle` function is a generic,
 and in most cases will automatically infer the right type for the result of the promise from the input.
