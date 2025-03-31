@@ -121,7 +121,8 @@ const justMe = await throttle(() => fetch('https://api.github.com/search/users?q
 ```
 ### Adjusting queue execution
 Starting in version `3.0.0`, you can now retry individual executions, or pause the queue entirely until a cooldown.
-Both are useful for reacting to different status codes when calling an API:
+Both are useful for reacting to different status codes when calling an API.
+To pause and/or retry executions, you can access the new queue `manager` as the first argument of the enqueued function:
 ```javascript
 const result = await throttle(async (manager) => {
     const response = await fetch('https://api.github.com/search/users?q=shaunpersad');
