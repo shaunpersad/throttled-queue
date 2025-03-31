@@ -7,12 +7,13 @@ module.exports = {
   plugins: ['import'],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    project: './tsconfig.eslint.json',
+    project: './tsconfig.json',
   },
   rules: {
     'no-param-reassign': 'off',
     'no-void': 'off',
     "max-len": ["error", { "code": 120 }],
+    '@typescript-eslint/no-loop-func': 'off',
     '@typescript-eslint/no-unsafe-assignment': 'off',
     '@typescript-eslint/no-unsafe-return': 'off',
     '@typescript-eslint/no-unsafe-call': 'off',
@@ -24,20 +25,5 @@ module.exports = {
     'import/prefer-default-export': 'off',
     'no-plusplus': 'off',
   },
-  overrides: [
-    {
-      files: [
-        'test/**/*.ts',
-      ],
-      env: {
-        mocha: true
-      },
-      rules: {
-        'prefer-arrow-callback': 'off',
-        'func-names': 'off',
-        '@typescript-eslint/no-loop-func': 'off'
-      }
-    }
-  ],
-  ignorePatterns: ["*.js"]
+  ignorePatterns: ["node_modules/", "dist/"]
 };
