@@ -140,6 +140,7 @@ const result = await throttle(async (manager) => {
     return response.json();
 });
 ```
+Note that pausing the queue does not affect executions that are already in-flight. Only future executions enqueued after the next tick of the event loop will be paused.
 ### Managing retry state
 In the above example, we could get ourselves into an infinite retry loop if the API consistently returns a bad status.
 To fix that, we can limit retries by maintaining some information about the state of retries. The second argument of the `throttle` enqueue function now accepts an arbitrary object that will be passed on to the `manager` for every execution of the function being enqueued:
