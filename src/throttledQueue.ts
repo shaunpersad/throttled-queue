@@ -1,49 +1,87 @@
-export interface QueueItem<Return, State> {
-  (manager: QueueManager<Return, State>, intervalStart: number): Promise<Return> | Return,
-}
-
-export interface QueueManager<Return, State> {
-  /**
-   * Retries the current function after the specified amount of time,
-   * whilst still preserving execution rules.
-   */
-  retry(afterMs?: number): Promise<Return>,
-
-  /**
-   * Pauses the entire queue and resumes execution after the specified amount of time,
-   * whilst still preserving execution rules.
-   */
-  pauseQueueAndRetry(afterMs?: number): Promise<Return>,
-
-  /**
-   * An arbitrary object that will be passed to a given execution across retries.
-   */
+export type QueueItemContext<State> = {
+  intervalStart: number,
   state: State,
-}
+};
+
+export type QueueItem<State, Return>  = (context: QueueItemContext<State>) => Promise<Return> | Return;
+
+export type ThrottledQueueOptions = {
+  /**
+   * Max number of executions for a given interval.
+   */
+  maxPerInterval?: number,
+  /**
+   * Duration in milliseconds.
+   */
+  interval?: number,
+  /**
+   * Space out the executions evenly.
+   */
+  evenlySpaced?: boolean,
+  /**
+   * How many times can `manager.retry` be called before throwing a `RetryError`.
+   */
+  maxRetries?: number,
+  /**
+   * How many times can `manager.pauseAndRetry` be called before throwing a `RetryError`.
+   */
+  maxRetriesWithPauses?: number,
+};
 
 export const DEFAULT_WAIT = 500;
+export const DEFAULT_RETRY_LIMIT = 30;
 
-export default function throttledQueue(
-  maxRequestsPerInterval = Infinity,
-  interval = 0,
-  evenlySpaced = false,
-) {
-  if (maxRequestsPerInterval < 1) {
-    throw new Error('"maxRequestsPerInterval" must be a positive integer.');
+export type RetryErrorOptions = {
+  retryAfter?: number | null,
+  pauseQueue?: boolean,
+  message?: string,
+};
+
+export class RetryError extends Error {
+  public readonly options: RetryErrorOptions;
+
+  constructor(options: RetryErrorOptions = {}) {
+    super(options.message ?? 'Maximum retry limit reached.');
+    this.options = options;
+  }
+}
+
+const INTERNAL_STATE = Symbol('internal_state');
+
+export function throttledQueue(options: ThrottledQueueOptions = {}) {
+  const {
+    interval = 0,
+    maxPerInterval = Infinity,
+    evenlySpaced = false,
+    maxRetries = DEFAULT_RETRY_LIMIT,
+    maxRetriesWithPauses = DEFAULT_RETRY_LIMIT,
+  } = options;
+  if (maxPerInterval < 1) {
+    throw new Error('"maxPerInterval" must be a positive integer.');
   }
   if (interval < 0) {
     throw new Error('"interval" cannot be negative.');
+  }
+  if (maxRetries < 0) {
+    throw new Error('"maxRetries" cannot be negative.');
+  }
+  if (maxRetriesWithPauses < 0) {
+    throw new Error('"maxRetriesWithPauses" cannot be negative.');
   }
   /**
    * If all requests should be evenly spaced, adjust to suit.
    */
   if (evenlySpaced) {
-    interval = Math.ceil(interval / maxRequestsPerInterval);
-    maxRequestsPerInterval = 1;
+    return throttledQueue({
+      ...options,
+      interval: Math.ceil(interval / maxPerInterval),
+      maxPerInterval: 1,
+      evenlySpaced: false,
+    });
   }
   const queue: Array<() => void> = [];
   let lastIntervalStart = 0;
-  let numRequestsPerInterval = 0;
+  let numPerInterval = 0;
   let timeout: number | undefined;
   /**
    * Gets called at a set interval to remove items from the queue.
@@ -62,10 +100,10 @@ export default function throttledQueue(
     }
 
     lastIntervalStart = now;
-    numRequestsPerInterval = 0;
+    numPerInterval = 0;
 
-    for (const callback of queue.splice(0, maxRequestsPerInterval)) {
-      numRequestsPerInterval++;
+    for (const callback of queue.splice(0, maxPerInterval)) {
+      numPerInterval++;
       callback();
     }
     if (queue.length) {
@@ -73,36 +111,65 @@ export default function throttledQueue(
     }
   };
 
-  const enqueue = <Return = unknown, State extends Record<string, unknown> = Record<string, unknown>>(
-    fn: QueueItem<Return, State>,
+  type WithInternalState<T> = T & {
+    [INTERNAL_STATE]: {
+      maxRetries: number,
+      maxRetriesWithPauses: number,
+    }
+  };
+
+  const enqueue = <Return, State extends Record<string, unknown> = Record<string, unknown>>(
+    fn: QueueItem<State, Return>,
     state?: State,
-  ): Promise<Return> => new Promise<Return>(
+  ) => new Promise<Return>(
       (resolve, reject) => {
-        const manager: QueueManager<Return, State> = {
-          retry: async (afterMs = interval || DEFAULT_WAIT) => {
-          /**
-           * Wait for the specified amount of time, then enqueue the function again.
-           */
-            await new Promise(
-              (r) => setTimeout(r, afterMs),
-            );
-            return enqueue(fn, state);
-          },
-          pauseQueueAndRetry: (afterMs = interval || DEFAULT_WAIT) => {
-          /**
-           * Stop accepting new functions for this interval, then push the timer out by the specified amount.
-           */
-            numRequestsPerInterval = maxRequestsPerInterval;
-            timeout !== undefined && clearTimeout(timeout);
-            timeout = setTimeout(dequeue, afterMs);
-            return enqueue(fn, state);
-          },
-          state: state ?? {} as State,
+        if (!state) {
+          state = {} as State;
+        }
+        if (!(INTERNAL_STATE in state)) {
+          Object.assign(state, {
+            [INTERNAL_STATE]: {
+              maxRetries,
+              maxRetriesWithPauses,
+            },
+          });
+        }
+        const retryableFn = async () => {
+          try {
+            return await fn({ intervalStart: lastIntervalStart, state: state as State });
+          } catch (err) {
+            if (err instanceof RetryError) {
+              const internalState = (state as WithInternalState<State>)[INTERNAL_STATE];
+              if (err.options.pauseQueue) {
+                if (internalState.maxRetriesWithPauses-- <= 0) {
+                  throw err;
+                }
+                /**
+                 * Stop accepting new functions for this interval, then push the timer out by the specified amount.
+                 */
+                numPerInterval = maxPerInterval;
+                timeout !== undefined && clearTimeout(timeout);
+                timeout = setTimeout(dequeue, err.options.retryAfter ?? options.interval ?? DEFAULT_WAIT);
+              } else {
+                if (internalState.maxRetries-- <= 0) {
+                  throw err;
+                }
+                /**
+                 * Wait for the specified amount of time, then enqueue the function again.
+                 */
+                await new Promise(
+                  (r) => setTimeout(r, err.options.retryAfter ?? options.interval ?? DEFAULT_WAIT),
+                );
+              }
+              return enqueue(fn, state);
+            }
+            throw err;
+          }
         };
 
         const callback = () => {
           Promise.resolve()
-            .then(() => fn(manager, lastIntervalStart))
+            .then(retryableFn)
             .then(resolve)
             .catch(reject);
         };
@@ -111,9 +178,9 @@ export default function throttledQueue(
 
         if (timeout === undefined && interval && (now - lastIntervalStart) > interval) {
           lastIntervalStart = now;
-          numRequestsPerInterval = 0;
+          numPerInterval = 0;
         }
-        if (numRequestsPerInterval++ < maxRequestsPerInterval) {
+        if (numPerInterval++ < maxPerInterval) {
           callback();
         } else {
           queue.push(callback);
@@ -126,3 +193,25 @@ export default function throttledQueue(
   return enqueue;
 }
 
+function getNumber(num: number | string): number {
+  if (typeof num === 'number') {
+    return num;
+  }
+  const numFromStr = Number(num);
+  if (!Number.isFinite(numFromStr)) {
+    throw new Error(`"${num}" is not a valid number.`);
+  }
+  return numFromStr;
+}
+
+export function seconds(numSeconds: number | string): number {
+  return getNumber(numSeconds) * 1000;
+}
+
+export function minutes(numMinutes: number | string): number {
+  return getNumber(numMinutes) * seconds(60);
+}
+
+export function hours(numHours: number | string): number {
+  return getNumber(numHours) * minutes(60);
+}

@@ -1,18 +1,18 @@
 {
   "name": "throttled-queue",
-  "version": "2.1.4",
+  "version": "3.0.0",
   "description": "Throttles arbitrary code to execute a maximum number of times per interval. Best for making throttled API requests.",
   "main": "dist/cjs/throttledQueue.cjs",
   "types": "dist/cjs/throttledQueue.d.cts",
   "type": "module",
   "exports": {
     "import": {
-      "default": "./dist/esm/throttledQueue.mjs",
-      "types": "./dist/esm/throttledQueue.d.mts"
+      "types": "./dist/esm/throttledQueue.d.mts",
+      "default": "./dist/esm/throttledQueue.mjs"
     },
     "require": {
-      "default": "./dist/cjs/throttledQueue.cjs",
-      "types": "./dist/cjs/throttledQueue.d.cts"
+      "types": "./dist/cjs/throttledQueue.d.cts",
+      "default": "./dist/cjs/throttledQueue.cjs"
     }
   },
   "files": [

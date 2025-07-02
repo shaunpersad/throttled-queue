@@ -13,20 +13,56 @@ npm install throttled-queue
 
 It can be used in a Node.js environment, or directly in the browser.
 
-## Usage
-1) `require` or `import` the factory function:
-```javascript
-const throttledQueue = require('throttled-queue');
-```
+### Upgrading to 3.x
+Note that version 3 is a *breaking change*:
 
-```javascript
+- Imports are now named, so use `import { throttledQueue } from 'throtted-queue` instead.
+- The queue options are now a single object.
+
+#### Upgrade example
+Version `2.x` and lower:
+```js
 import throttledQueue from 'throttled-queue';
+const throttle = throttledQueue(5, 1000, true);
 ```
 
-2) Create an instance of a throttled queue by specifying the maximum number of requests as the first parameter,
-and the interval in milliseconds as the second:
+To upgrade to `3.x`, the following is equivalent to the above:
+```js
+import { throttledQueue, seconds } from 'throtted-queue';
+const throttle = throttledQueue({
+    maxPerInterval: 5,
+    interval: seconds(1), // you can still pass in the milliseconds directly, i.e. 1000
+    evenlySpaced: true,
+});
+```
+
+## Usage
+1) `import` the factory function:
 ```javascript
-const throttle = throttledQueue(5, 1000); // at most 5 requests per second.
+import { throttledQueue } from 'throttled-queue';
+```
+
+CommonJS `require` is also supported:
+```javascript
+const { throttledQueue } = require('throttled-queue');
+```
+
+2) Create an instance of a throttled queue by specifying the maximum number of executions per interval, and the duration of the interval in milliseconds:
+
+```javascript
+const throttle = throttledQueue({
+    maxPerInterval: 5,
+    interval: 1000,
+}); // at most 5 requests per second.
+```
+
+You may also use `seconds`, `minutes`, and `hours` helpers to calculate the interval duration:
+```js
+import { throttledQueue, seconds } from 'throtted-queue';
+const throttle = throttledQueue({
+    maxPerInterval: 5,
+    interval: seconds(1),
+}); // at most 5 requests per second.
 ```
 
 3) Use the `throttle` instance as a function to enqueue actions:
@@ -44,12 +80,15 @@ const result = await throttle(() => {
 // result now equals "hello"
 ```
 
-## Quick Examples
+## Examples
 ### Basic
 Rapidly assigning network calls to be run, but they will be limited to 1 request per second.
 ```javascript
-const throttledQueue = require('throttled-queue');
-const throttle = throttledQueue(1, 1000); // at most make 1 request every second.
+import { throttledQueue, seconds } from 'throttled-queue';
+const throttle = throttledQueue({
+    maxPerInterval: 1,
+    interval: seconds(1),
+}); // at most make 1 request every second.
 
 for (let x = 0; x < 100; x++) {
     throttle(() => {
@@ -59,11 +98,14 @@ for (let x = 0; x < 100; x++) {
 }
 ```
 ### Reusable
-Wherever the `throttle` instance is used, your action will be placed into the same queue, 
+Wherever the `throttle` instance is used, your action will be placed into the same queue,
 and be subject to the same rate limits.
 ```javascript
-const throttledQueue = require('throttled-queue');
-const throttle = throttledQueue(1, 60 * 1000); // at most make 1 request every minute.
+import { throttledQueue, minutes } from 'throttled-queue';
+const throttle = throttledQueue({
+    maxPerInterval: 1,
+    interval: minutes(1),
+}); // at most make 1 request every minute.
 
 for (let x = 0; x < 50; x++) {
     throttle(() => {
@@ -79,10 +121,13 @@ for (let y = 0; y < 50; y++) {
 }
 ```
 ### Bursts
-By specifying a number higher than 1 as the first parameter, you can dequeue multiple actions within the given interval:
+Uou can perform multiple executions within the given interval:
 ```javascript
-const throttledQueue = require('throttled-queue');
-const throttle = throttledQueue(10, 1000); // at most make 10 requests every second.
+import { throttledQueue, seconds } from 'throttled-queue';
+const throttle = throttledQueue({
+    maxPerInterval: 10,
+    interval: seconds(1),
+}); // at most make 10 requests every second.
 
 for (let x = 0; x < 100; x++) {
     throttle(() => {
@@ -94,8 +139,12 @@ for (let x = 0; x < 100; x++) {
 ### Evenly spaced
 You can space out your actions by specifying `true` as the third (optional) parameter:
 ```javascript
-const throttledQueue = require('throttled-queue');
-const throttle = throttledQueue(10, 1000, true); // at most make 10 requests every second, but evenly spaced.
+import { throttledQueue, seconds } from 'throttled-queue';
+const throttle = throttledQueue({
+    maxPerInterval: 10,
+    interval: seconds(1),
+    evenlySpaced: true,
+})
 
 for (var x = 0; x < 100; x++) {
     throttle(() => {
@@ -105,10 +154,13 @@ for (var x = 0; x < 100; x++) {
 }
 ```
 ### Promises
-Starting in version `2.0.0`, you can wait for the results of your operation:
+You can also wait for the results of your operation:
 ```javascript
-const throttledQueue = require('throttled-queue');
-const throttle = throttledQueue(10, 1000, true); // at most make 10 requests every second, but evenly spaced.
+import { throttledQueue, seconds } from 'throttled-queue';
+const throttle = throttledQueue({
+    maxPerInterval: 10,
+    interval: seconds(1),
+});
 
 const usernames = ['shaunpersad', 'forward-motion'];
 const profiles = await Promise.all(
@@ -122,59 +174,92 @@ const justMe = await throttle(() => fetch('https://api.github.com/search/users?q
 ### Adjusting queue execution
 Starting in version `3.0.0`, you can now retry individual executions, or pause the queue entirely until a cooldown.
 Both are useful for reacting to different status codes when calling an API.
-To pause and/or retry executions, you can access the new queue `manager` as the first argument of the enqueued function:
+To pause and/or retry executions, you can throw the new `RetryError`:
 ```javascript
-const result = await throttle(async (manager) => {
+import { throttledQueue, seconds, RetryError } from 'throttled-queue';
+const throttle = throttledQueue({
+    maxPerInterval: 10,
+    interval: seconds(1),
+});
+const result = await throttle(async () => {
     const response = await fetch('https://api.github.com/search/users?q=shaunpersad');
     if (response.status === 429) {
-        const retryAfter = response.headers.get('retry-after') ?? 0;
+        const retryAfter = response.headers.get('retry-after');
         if (retryAfter) { // retry-after is in seconds
-            const retryAfterMs = retryAfter * 1000;
-            return manager.pauseQueueAndRetry(retryAfterMs); // pause the queue until retryAfter
+            throw new RetryError({
+                retryAfter: seconds(retryAfter),
+                pauseQueue: true,
+            }); // pause the queue until retryAfter
         }
-        // if we can't tell when to retry, use the default wait time
-        return manager.pauseQueueAndRetry();
+        // if we can't tell when to retry, wait for the given interval of 1 second
+        throw new RetryError({
+            pauseQueue: true,
+        });
     }
     // for all other bad statuses, we just want to retry this specific API call
     if (!response.ok) {
-        return manager.retry(); // retry using the default wait time
+        throw new RetryError();
     }
+    // if the response succeeded, return the result
     return response.json();
 });
 ```
-Note that pausing the queue does not affect executions that are already in-flight. Only future executions enqueued after the next tick of the event loop will be paused.
-### Managing retry state
-In the above example, we could get ourselves into an infinite retry loop if the API consistently returns a bad status.
-To fix that, we can limit retries by maintaining some information about the state of retries. The second argument of the `throttle` enqueue function now accepts an arbitrary object that will be passed on to the `manager` for every execution of the function being enqueued:
+
+#### `RetryError` options
+Any of the following options can be optionally passed in when constructing a `RetryError`:
+- `retryAfter`: A number in milliseconds describing how long to wait to retry. If it is not set, or is set to `null`, it defaults to the `interval` set in the `throttledQueue` options. If both `retryAfter` and `interval` are not set, it defaults to `DEFAULT_WAIT`, which is currently 500 milliseconds.
+- `pauseQueue`: If set to `true`, will pause the entire queue's execution. Note that it does not immediately pause all executions already in-flight, but subsequent executions will be paused. The queue will be paused by the amount of time specified by `retryAfter`.
+- `message`: An error message to attach to the error object.
+
+#### Maximum retries
+By default, each category is limited to a maximum of 30 (`DEFAULT_RETRY_LIMIT`) retries.
+You can override this limit for both retries and retries with queue pauses in the options passed to `throttledQueue`:
+- The `maxRetries` option applies only to calls where `RetryError` is thrown with `pauseQueue: false`, or not set.
+- The `maxRetriesWithPauses` option applies only to calls where `RetryError` is thrown with `pauseQueue: true`.
+
+If the maximum number of retries is exceeded, the `RetryError` will be thrown.
+
+### Dynamic queues
+Using `RetryError`, you can define queues that are _unbounded_, meaning their rate limit is not initially defined. You can then pause the queue once your underlying API returns an error:
 ```javascript
+import { throttledQueue, seconds, RetryError } from 'throttled-queue';
+const throttle = throttledQueue(); // passing no options creates an "unbounded" queue, executing as fast as possible
+const result = await throttle(async () => {
+    const response = await fetch('https://api.github.com/search/users?q=shaunpersad');
+    if (response.status === 429) {
+        const retryAfter = response.headers.get('retry-after');
+        throw new RetryError({
+            retryAfter: retryAfter ? seconds(retryAfter) : null,
+            pauseQueue: true,
+        }); // pause the queue until retryAfter
+    }
+    // for all other bad statuses, we just want to retry this specific API call
+    if (!response.ok) {
+        throw new RetryError();
+    }
+    // if the response succeeded, return the result
+    return response.json();
+});
+```
+
+### Execution state
+The second argument of the `throttle` enqueue function accepts an arbitrary object that will be passed on to the execution context (the first argument) of the function being enqueued:
+```javascript
+const badStatuses = [];
 const result = await throttle(
-    async (manager) => {
+    async ({ state }) => {
         const response = await fetch('https://api.github.com/search/users?q=shaunpersad');
         if (!response.ok) {
-            if (!manager.state.retried) {
-                manager.state.retried = true;
-                return manager.retry(1500); // retry this function after 1500ms
-            }
-            throw new Error(await response.text());
+            state.badStatuses.push(response.status);
+            throw new RetryError();
         }
         return response.json();
     },
-    { retried: false }, // the state that will be preserved across all retries of the same enqueued function above
+    { badStatuses }, // this object be available across all retries of the same enqueued function above
 );
+console.log(badStatuses); // this array now contains a log of all bad statuses received.
 ```
 Note that you can pass any object as the initial state, so if you wanted to keep track of the number of retries,
 or implement more advanced retries using exponential backoff etc., you could store whatever you needed to in the state object.
-## Typescript support
-The package is written in Typescript and includes types by default. The `throttle` function is a generic,
-and in most cases will automatically infer the right type for the result of the promise from the input.
-
-However, you may also specify the return type of the promise when needed:
-```typescript
-import throttledQueue from 'throttled-queue';
-const throttle = throttledQueue(1, 1000);
-const result1 = await throttle<string>(() => '1');
-const result2 = await throttle<boolean>(() => Promise.resolve(true));
-```
-
 
 
