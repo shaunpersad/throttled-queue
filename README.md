@@ -28,7 +28,7 @@ const throttle = throttledQueue(5, 1000, true);
 
 To upgrade to `3.x`, the following is equivalent to the above:
 ```js
-import { throttledQueue, seconds } from 'throtted-queue';
+import { throttledQueue, seconds } from 'throttled-queue';
 const throttle = throttledQueue({
     maxPerInterval: 5,
     interval: seconds(1), // you can still pass in the milliseconds directly, i.e. 1000
